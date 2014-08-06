@@ -1,5 +1,5 @@
 {
-    "name": "albertvision/MRest",
+    "name": "albertvision/mrest",
     "description": "A PHP REST Framework",
     "version": "1.0.0-dev",
     "keywords": ["framework", "php", "rest", "mrest"],
