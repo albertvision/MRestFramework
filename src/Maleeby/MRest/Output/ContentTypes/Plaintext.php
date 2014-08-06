@@ -2,7 +2,7 @@
 
 namespace Maleeby\MRest\Output\ContentTypes;
 
-class Plaintext implements \MRest\Output\IOutput {
+class Plaintext implements \Maleeby\MRest\Output\IOutput {
     public static function getHeader() {
         return 'text/plain';
     }
