@@ -1,7 +1,7 @@
 {
     "name": "albertvision/MRest",
     "description": "A PHP REST Framework",
-    "version": "1.0.0-alpha",
+    "version": "1.0.0-dev",
     "keywords": ["framework", "php", "rest", "mrest"],
     "homepage": "http://mrest.maleeby.com",
     "license": "MIT",
