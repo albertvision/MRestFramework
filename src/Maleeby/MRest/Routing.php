@@ -27,7 +27,8 @@ class Routing {
 
     public static function getUri() {
         if (self::$_uri === null) {
-            self::$_uri = self::fixUri(substr($_SERVER['REQUEST_URI'], strlen(BASE_URI)));
+            $uri = explode('?', $_SERVER['REQUEST_URI'], 2)[0];
+            self::$_uri = self::fixUri(substr($uri, strlen(BASE_URI)));
         }
         return self::$_uri;
     }
