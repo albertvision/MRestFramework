@@ -1,6 +1,6 @@
 <?php
 
-namespace MRest\Libs;
+namespace Maleeby\MRest\Libs;
 
 class DB {
 

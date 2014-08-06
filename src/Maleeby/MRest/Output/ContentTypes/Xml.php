@@ -1,6 +1,6 @@
 <?php
 
-namespace MRest\Output\ContentTypes;
+namespace Maleeby\MRest\Output\ContentTypes;
 
 class Xml implements \MRest\Output\IOutput {
 

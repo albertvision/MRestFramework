@@ -1,6 +1,6 @@
 <?php
 
-namespace MRest\Output\ContentTypes;
+namespace Maleeby\MRest\Output\ContentTypes;
 
 class Json implements \MRest\Output\IOutput {
     public static function getHeader() {

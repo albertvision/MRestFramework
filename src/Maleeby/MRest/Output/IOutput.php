@@ -1,6 +1,6 @@
 <?php
 
-namespace MRest\Output;
+namespace Maleeby\MRest\Output;
 
 interface IOutput {
     public static function getHeader();

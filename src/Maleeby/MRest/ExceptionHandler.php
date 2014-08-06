@@ -1,6 +1,6 @@
 <?php
 
-namespace MRest;
+namespace Maleeby\MRest;
 
 class ExceptionHandler {
     public function __construct() {
