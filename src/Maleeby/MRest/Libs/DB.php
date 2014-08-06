@@ -13,7 +13,7 @@ class DB {
     private $_params = [];
 
     public function __construct($con) {
-        $config = \MRest\MRest::getConfig()['databases'];
+        $config = \Maleeby\MRest\MRest::getConfig()['databases'];
         if ($con instanceof \PDO) {
             $pdoObj = $con;
         } elseif (is_array($con)) {
