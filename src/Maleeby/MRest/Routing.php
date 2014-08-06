@@ -18,13 +18,13 @@ class Routing {
         }
         $class = new $className();
         
-        if (!is_callable([$className, $httpMethod])) {
+        if (!is_callable([$class, $httpMethod])) {
             throw new \Exception('Method [' . $httpMethod . '] not allowed', 405);
         }
         if (isset($uriItems[0])) {
             unset($uriItems[0]);
         }
-        return call_user_func_array([$className, $httpMethod], $uriItems);
+        return call_user_func_array([$class, $httpMethod], $uriItems);
     }
 
     public static function getUri() {
