@@ -16,6 +16,8 @@ class Routing {
         if (!class_exists($className)) {
             throw new \Exception('Application class [' . $className . '] was not found', 404);
         }
+        $class = new $className();
+        
         if (!is_callable([$className, $httpMethod])) {
             throw new \Exception('Method [' . $httpMethod . '] not allowed', 405);
         }
