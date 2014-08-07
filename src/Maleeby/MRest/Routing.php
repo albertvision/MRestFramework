@@ -13,7 +13,8 @@ class Routing {
         $httpMethod = strtolower($_SERVER['REQUEST_METHOD']);
         $className = '\App\\' . ($uriItems[0] ? $uriItems[0] : MRest::getConfig()['defaultRouteClass']);
 
-        if (!class_exists($className)) {
+        $reflectionClass = new \ReflectionClass($className);
+        if (!$reflectionClass->isInstantiable($reflectionClass)) {
             throw new \Exception('Application class [' . $className . '] was not found', 404);
         }
         $class = new $className();
