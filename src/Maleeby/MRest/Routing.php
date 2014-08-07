@@ -14,7 +14,7 @@ class Routing {
         $className = '\App\\' . ($uriItems[0] ? $uriItems[0] : MRest::getConfig()['defaultRouteClass']);
 
         $reflectionClass = new \ReflectionClass($className);
-        if (!$reflectionClass->isInstantiable($reflectionClass)) {
+        if (!$reflectionClass->isInstantiable()) {
             throw new \Exception('Application class [' . $className . '] was not found', 404);
         }
         $class = new $className();
