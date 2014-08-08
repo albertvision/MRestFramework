@@ -40,14 +40,14 @@ class MRest {
     public function run() {
         $routeOutput = Routing::dispatch();
         if (!is_array($routeOutput)) {
-            throw new \Exception('Invalid route output', 504);
+            throw new \Exception('Invalid route output', 503);
         }
 
         Output\Output::render($routeOutput);
     }
 
-    public static function getConfig() {
-        return self::$_config;
+    public static function getConfig($key = null) {
+        return $key === null ? self::$_config : self::$_config[$key];
     }
 
 }
