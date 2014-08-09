@@ -7,14 +7,19 @@ class MRest {
     private static $_config = [
         'appDir' => '../app',
         'contentType' => 'Json',
-        'defaultRouteClass' => 'Index'
+        'routing' => [
+            'dispatcher' => 'Routing::_mainDispatcher',
+            'defaults' => [
+                '*' => 'Index'
+            ]
+        ]
     ];
 
     public function __construct($config = []) {
         if (!is_array($config)) {
             throw new \Exception('Invalid configuration array', 500);
         }
-        self::$_config = array_merge(self::$_config, $config);
+        self::$_config = array_replace_recursive(self::$_config, $config);
         self::$_config['appDir'] = realpath(self::$_config['appDir']);
         if (!self::$_config['appDir'] || !is_readable(self::$_config['appDir'])) {
             throw new \Exception('Invalid application directory [' . $config['appDir'] . ']', 500);
