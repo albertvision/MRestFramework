@@ -17,8 +17,7 @@ class Routing {
         $httpMethod = strtolower($_SERVER['REQUEST_METHOD']);
         $className = self::fixNamespace(self::_callDispatcher(self::$_config['dispatcher']));
         
-        $reflectionClass = new \ReflectionClass($className);
-        if (!$reflectionClass->isInstantiable()) {
+        if (!class_exists($className) || !(new \ReflectionClass($className))->isInstantiable()) {
             throw new \Exception('Application class [' . $className . '] was not found', 404);
         }
         $class = new $className();
