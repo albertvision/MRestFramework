@@ -4,31 +4,39 @@ namespace Maleeby\MRest;
 
 class Routing {
 
+    /**
+     * Current URI
+     * @var string
+     */
     private static $_uri = null;
-    private static $_uriData;
+    
+    /**
+     * Routing configuration
+     * @var array
+     */
     private static $_config = [];
 
+    /**
+     * Initialization of the Routing class
+     * 
+     * @return mixed
+     * @throws \Exception
+     */
     public static function dispatch() {
         self::$_config = MRest::getConfig('routing');
 
-        $uriInfo = self::analizeUri();
-        $uri = $uriInfo['uri'];
-        $uriItems = explode('/', $uri);
-        $httpMethod = strtolower($_SERVER['REQUEST_METHOD']);
-        $className = self::fixNamespace(self::_callDispatcher(self::$_config['dispatcher']));
-        
-        if (!class_exists($className) || !(new \ReflectionClass($className))->isInstantiable()) {
-            throw new \Exception('Application class [' . $className . '] was not found', 404);
-        }
-        $class = new $className();
+        $routeData = self::_callDispatcher(self::$_config['dispatcher']);
 
-        if (!is_callable([$class, $httpMethod])) {
-            throw new \Exception('Method [' . $httpMethod . '] not allowed', 405);
+        if (!class_exists($routeData['class']) || !(new \ReflectionClass($routeData['class']))->isInstantiable()) {
+            throw new \Exception('Application class [' . $routeData['class'] . '] was not found', 404);
         }
-        if (isset($uriItems[0])) {
-            unset($uriItems[0]);
+        $class = new $routeData['class']();
+
+        if (!is_callable([$class, $routeData['method']])) {
+            throw new \Exception('Method [' . $routeData['method'] . '] not allowed', 405);
         }
-        return call_user_func_array([$class, $httpMethod], $uriItems);
+
+        return call_user_func_array([$class, $routeData['method']], $routeData['attributes']);
     }
 
     /**
@@ -60,14 +68,44 @@ class Routing {
      * @return string Controller's callback
      */
     private static function _mainDispatcher($uri, $config) {
-        foreach($config['routes'] as $routePattern => $className) {
-            if(preg_match('#'.$routePattern.'#', $uri)) {
+        $uriInfo = self::analizeUri();
+        $uri = $uriInfo['uri'];
+        $uriItems = explode('/', $uri);
+        $attributes = [];
+
+        foreach ($config['routes'] as $routePattern => $className) {
+            if (preg_match('#' . $routePattern . '#', $uri)) {
                 $class = $className;
+                $itemCount = count(explode('/', str_replace('\\/', '/', $routePattern)));
+
+                for ($i = 0; $i < $itemCount; $i++) {
+                    unset($uriItems[$i]);
+                }
+                $attributes = array_values($uriItems);
                 break;
             }
         }
-        
-        return $class ? $class : self::_getController($uri, 'App\\');
+
+        if (!$class) {
+            $class = self::_getController($uri, 'App\\');
+            $classUri = self::_getControllerBaseUri($class);
+            
+            if(strpos($uri, $classUri) === 0 && strlen($uri) > strlen($classUri)) {
+                $attributesUri = substr($uri, strlen($classUri)+1);
+                $attributes = explode('/', $attributesUri);
+            }
+        }
+        print_r([
+            'class' => self::fixNamespace($class ? $class : self::_getController($uri, 'App\\')),
+            'method' => strtolower($_SERVER['REQUEST_METHOD']),
+            'attributes' => $attributes
+        ]);
+        exit;
+        return [
+            'class' => self::fixNamespace($class ? $class : self::_getController($uri, 'App\\')),
+            'method' => strtolower($_SERVER['REQUEST_METHOD']),
+            'attributes' => $attributes
+        ];
     }
 
     /**
@@ -79,12 +117,14 @@ class Routing {
      * @return array [string uri, string namespace, array defaults]
      */
     private static function _getController($uri, $namespace) {
-        $dir = self::fixPath(APP_PATH . '/../' . $namespace . '/');
+        $dir = realpath(APP_PATH . '/../' . $namespace) . DIRECTORY_SEPARATOR;
 
         if (!is_dir($dir . $uri)) {
             $uriParts = explode('/', $uri, 2);
             if (is_dir($dir . $uriParts[0])) {
-                return self::_getController($uriParts[1], $namespace . '\\' . $uriParts[0]);
+                return self::_getController($uriParts[1], $namespace . $uriParts[0] . '\\');
+            } elseif (is_file($dir . $uriParts[0] . '.php')) {
+                $uri = $uriParts[0];
             }
         } else {
             $namespace = $namespace . '\\' . str_replace('/', '\\', $uri);
@@ -98,7 +138,7 @@ class Routing {
             $uri = self::getNamespaceDefaultClass($namespace, 'App\\'); // Sets the default class
         }
 
-        return $namespace . '\\' . $uri;
+        return self::fixNamespace($namespace . '\\' . $uri);
     }
 
     /**
@@ -122,6 +162,20 @@ class Routing {
         return $controller;
     }
 
+    /**
+     * Get the base URI of controller
+     * 
+     * @param string $class Class name
+     * @return string Class base URI
+     */
+    private static function _getControllerBaseUri($class) {
+        return self::fixUri(substr($class, strlen('App\\')));
+    }
+
+    /**
+     * Get the current URI
+     * @return string The current URI
+     */
     public static function getUri() {
         if (self::$_uri === null) {
             $uri = explode('?', $_SERVER['REQUEST_URI'], 2)[0];
@@ -130,6 +184,12 @@ class Routing {
         return self::$_uri;
     }
 
+    /**
+     * Make an analize of the URI. 
+     * Returns the output content type and the URI
+     * 
+     * @return array
+     */
     public static function analizeUri() {
         $uri = self::getUri();
         $uriInfo = pathinfo($uri);
@@ -144,8 +204,14 @@ class Routing {
         ];
     }
 
+    /**
+     * Fix the URI. Removes the multiple slashes
+     * 
+     * @param string $url URI
+     * @return string The cleaned URI
+     */
     public static function fixUri($url) {
-        $url = preg_replace('#/+#', '/', $url);
+        $url = preg_replace('#/+|\\\+#', '/', $url);
 
         if ($url[0] == '/') {
             $url = substr($url, 1, strlen($url));
@@ -156,12 +222,25 @@ class Routing {
         return $url;
     }
 
+    /**
+     * Fix the path. Removes the multiple / and \ from the path and replaces them with the OS directory separator
+     * @param string $path Path
+     * @return string Filtered path
+     */
     public static function fixPath($path) {
         return preg_replace('#\\\+|/+#', DIRECTORY_SEPARATOR, $path);
     }
-    
+
+    /**
+     * Fix the namespace. Removes the multiple \ and / from it and replaces them with \
+     * 
+     * @param string $namespace Namespace
+     * @return string Filtered namespace
+     */
     public static function fixNamespace($namespace) {
-        return preg_replace('/\\\+/', '\\', $namespace);
+        $namespace = preg_replace('/\\\+|\/+/', '\\', $namespace);
+
+        return substr($namespace, -1) == '\\' ? substr($namespace, 0, strlen($namespace) - 1) : $namespace;
     }
 
 }
