@@ -95,12 +95,7 @@ class Routing {
                 $attributes = explode('/', $attributesUri);
             }
         }
-        print_r([
-            'class' => self::fixNamespace($class ? $class : self::_getController($uri, 'App\\')),
-            'method' => strtolower($_SERVER['REQUEST_METHOD']),
-            'attributes' => $attributes
-        ]);
-        exit;
+        
         return [
             'class' => self::fixNamespace($class ? $class : self::_getController($uri, 'App\\')),
             'method' => strtolower($_SERVER['REQUEST_METHOD']),
